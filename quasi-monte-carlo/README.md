@@ -72,6 +72,8 @@ matching the theoretical `-1/2`), `N^-1.09` (Sobol), and `N^-0.97` (Halton) — 
 sequences decay close to a full order faster than standard Monte Carlo, as expected for a smooth,
 effectively one-dimensional integrand.
 
+![RMSE vs. sample size, European call, log-log with N^-1/2 and N^-1 reference slopes](qmc_1d_convergence.png)
+
 For the 16-dimensional Asian call (reference price `5.5505` from a 4-million-path standard-MC
 run), the advantage is much smaller: standard MC decays at `N^-0.48` as before, but Sobol only
 reaches `N^-0.49` — essentially no improvement — while Halton reaches `N^-0.70`. This is a real
@@ -81,3 +83,8 @@ onto an equally-weighted path average does not concentrate the sequence's unifor
 matters most. In practice this gap is closed with a dimension-reduction path construction (e.g. a
 Brownian bridge or principal-component construction of the path), which was intentionally left out
 here to keep the comparison isolated to the sampling sequence itself.
+
+![RMSE vs. sample size, 16-dimensional Asian call](qmc_asian_convergence.png)
+
+The visibly steeper slope in the 1-D plot versus the near-flat gap between MC and Sobol in the
+16-D plot is the same effective-dimension story shown graphically.

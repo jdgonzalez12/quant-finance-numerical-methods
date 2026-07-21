@@ -47,6 +47,14 @@ compared at several step sizes `h` against a high-accuracy reference (second-ord
 samples, velocity and acceleration are recovered via forward/backward differences at the
 endpoints and centered differences in the interior.
 
+![Position, velocity, and acceleration recovered from six discrete samples](kinematics_from_position_data.png)
+
+The velocity curve's kink and the acceleration curve's roughness are the expected artifact of
+differentiating a coarse, noise-free but only piecewise-consistent discrete dataset twice — each
+differencing pass amplifies the discreteness of the input, exactly what motivates preferring
+centered differences (used here in the interior) over one-sided ones wherever both endpoints of
+the stencil are available.
+
 **3. Numerical integration: rectangles, Simpson's 1/3, and Monte Carlo.** All three methods
 applied to `f(x) = sin(sin(x))` on `[0, π]`, checked against `scipy.integrate.quad`; a coarse
 rectangle-rule pass is also checked against a finer Simpson reference, and all three methods are
@@ -54,6 +62,8 @@ compared directly against each other.
 
 **4. Heun's method (explicit predictor-corrector) for an ODE.** Solves
 `dy/dx = yx² - y`, `y(0) = 1`, over `x ∈ [0, 3]` with step `h = 0.2`.
+
+![Heun's-method solution trajectory](heun_method_ode_solution.png)
 
 ## Numerical differentiation and integration
 
@@ -70,3 +80,9 @@ against `scipy.integrate.quad` in absolute and relative error.
 (`dx/dt = -x*sin²(t)`, `x(0) = 1`) and a second-order ODE (`y'' = t - y`, `y(0) = 2`, `y'(0) = 1`,
 reduced to a first-order system) are both solved over `t ∈ [0, 3]` with step `dt = 0.1`, using all
 three methods, and the resulting trajectories are compared graphically.
+
+![Euler, midpoint, and Heun trajectories for the second-order ODE](ode_euler_heun_midpoint_comparison.png)
+
+At this step size the three trajectories are visually close but not identical: Euler's curve is
+the one that drifts furthest from the other two, consistent with it being the only `O(\Delta t)`
+scheme among three `O(\Delta t^2)`-and-better methods being compared on the same problem.

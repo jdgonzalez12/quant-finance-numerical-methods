@@ -93,6 +93,7 @@ indistinguishable output (see below) — the gap that "`O(N)` per iteration" vs.
 |---|---|
 | `american_option_lcp_psor.cpp` | Grid setup, PSOR solver, the direct Brennan-Schwartz solver, and a European closed-form cross-check |
 | `american_put_value.csv` | `V(S, 0)` under both PSOR and Brennan-Schwartz, alongside the intrinsic value, over the economically relevant range of `S` |
+| `plot_results.py` | Reads the CSV and renders `american_put_value.png` (post-processing only — both solvers above are pure C++) |
 
 ## How to build and run
 
@@ -123,3 +124,10 @@ tolerance accumulating over `2000` steps, not a difference in what LCP each is s
 Brennan-Schwartz reaches it in `13.9x` less wall time. The American price exceeds the European price
 everywhere, as it must: the American contract's payoff set is a superset of the European one's (any
 stopping time is available, including `τ = T`), so `V^{American} ≥ V^{European}` pointwise.
+
+![American put value vs. underlying: PSOR and Brennan-Schwartz agree, both bounded below by intrinsic value](american_put_value.png)
+
+The PSOR and Brennan-Schwartz curves are visually indistinguishable everywhere, and both sit
+strictly above the dotted intrinsic-value line except in the deep-in-the-money region where early
+exercise is optimal and the option value equals its intrinsic value exactly — the free boundary
+between the continuation and exercise regions is the point where the solid and dotted curves meet.

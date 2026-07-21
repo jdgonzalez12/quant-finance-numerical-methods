@@ -14,24 +14,23 @@
 // equation).
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
 
-using namespace std;
-
 // Reference-only dense solver (Gaussian elimination with partial pivoting).
 // Used exclusively to cross-validate solveBoxBlockBidiagonal below; O(n^3)
 // and never called inside the per-timestep hot path.
-vector<double> solveDenseReference(vector<vector<double>> A, vector<double> b) {
+std::vector<double> solveDenseReference(std::vector<std::vector<double>> A, std::vector<double> b) {
     int n = static_cast<int>(b.size());
     for (int col = 0; col < n; ++col) {
         int piv = col;
         for (int row = col + 1; row < n; ++row)
-            if (fabs(A[row][col]) > fabs(A[piv][col])) piv = row;
-        swap(A[col], A[piv]);
-        swap(b[col], b[piv]);
+            if (std::fabs(A[row][col]) > std::fabs(A[piv][col])) piv = row;
+        std::swap(A[col], A[piv]);
+        std::swap(b[col], b[piv]);
         for (int row = col + 1; row < n; ++row) {
             double m = A[row][col] / A[col][col];
             if (m == 0.0) continue;
@@ -39,7 +38,7 @@ vector<double> solveDenseReference(vector<vector<double>> A, vector<double> b) {
             b[row] -= m * b[col];
         }
     }
-    vector<double> x(n);
+    std::vector<double> x(n);
     for (int row = n - 1; row >= 0; --row) {
         double s = b[row];
         for (int k = row + 1; k < n; ++k) s -= A[row][k] * x[k];
@@ -52,8 +51,8 @@ vector<double> solveDenseReference(vector<vector<double>> A, vector<double> b) {
 // dV/dS = W; Q: box average of the PDE), for cells j = 0, ..., J-1, plus the
 // two Dirichlet values that close the system at S=0 and S=Smax.
 struct BoxSystem {
-    vector<double> p00, p01, p10, p11, pr;  // P_j: p00 V_j + p01 W_j + p10 V_{j+1} + p11 W_{j+1} = pr
-    vector<double> q00, q01, q10, q11, qr;  // Q_j: analogous
+    std::vector<double> p00, p01, p10, p11, pr;  // P_j: p00 V_j + p01 W_j + p10 V_{j+1} + p11 W_{j+1} = pr
+    std::vector<double> q00, q01, q10, q11, qr;  // Q_j: analogous
     double V0, VJ;
 };
 
@@ -72,11 +71,11 @@ struct BoxSystem {
 // tridiagonal-solvers/), and costs O(J) instead of the O(J^3) a dense solve
 // of the same 2(J+1)-dimensional system requires -- see the "Computational
 // complexity" section of this folder's README for the exact operation count.
-pair<vector<double>, vector<double>> solveBoxBlockBidiagonal(const BoxSystem& sys) {
+std::pair<std::vector<double>, std::vector<double>> solveBoxBlockBidiagonal(const BoxSystem& sys) {
     int J = static_cast<int>(sys.p00.size());
 
-    vector<double> e0(J + 1), e1(J + 1), er(J + 1);
-    vector<double> A1(J), B1(J), C1(J), D1(J);
+    std::vector<double> e0(J + 1), e1(J + 1), er(J + 1);
+    std::vector<double> A1(J), B1(J), C1(J), D1(J);
 
     e0[0] = 1.0;
     e1[0] = 0.0;
@@ -85,8 +84,8 @@ pair<vector<double>, vector<double>> solveBoxBlockBidiagonal(const BoxSystem& sy
     const double kMinPivot = 1e-12;
     for (int j = 0; j < J; ++j) {
         double E0 = e0[j], E1 = e1[j], ER = er[j];
-        if (fabs(E0) < kMinPivot)
-            throw runtime_error("solveBoxBlockBidiagonal: degenerate pivot at cell " + to_string(j));
+        if (std::fabs(E0) < kMinPivot)
+            throw std::runtime_error("solveBoxBlockBidiagonal: degenerate pivot at cell " + std::to_string(j));
 
         // Eliminate V_j = (ER - E1*W_j)/E0 from P_j and Q_j.
         double a1 = sys.p01[j] - sys.p00[j] * E1 / E0;
@@ -104,8 +103,8 @@ pair<vector<double>, vector<double>> solveBoxBlockBidiagonal(const BoxSystem& sy
         C1[j] = c1;
         D1[j] = d1;
 
-        if (fabs(a1) < kMinPivot)
-            throw runtime_error("solveBoxBlockBidiagonal: degenerate W_j pivot at cell " + to_string(j));
+        if (std::fabs(a1) < kMinPivot)
+            throw std::runtime_error("solveBoxBlockBidiagonal: degenerate W_j pivot at cell " + std::to_string(j));
 
         // Eliminate W_j between (a1,b1,c1,d1) and (a2,b2,c2,d2):
         //   a2*(P') - a1*(Q') removes W_j, leaving R_{j+1} in (V_{j+1}, W_{j+1}).
@@ -114,10 +113,10 @@ pair<vector<double>, vector<double>> solveBoxBlockBidiagonal(const BoxSystem& sy
         er[j + 1] = a2 * d1 - a1 * d2;
     }
 
-    if (fabs(e1[J]) < kMinPivot)
-        throw runtime_error("solveBoxBlockBidiagonal: degenerate terminal pivot");
+    if (std::fabs(e1[J]) < kMinPivot)
+        throw std::runtime_error("solveBoxBlockBidiagonal: degenerate terminal pivot");
 
-    vector<double> V(J + 1), W(J + 1);
+    std::vector<double> V(J + 1), W(J + 1);
     V[J] = sys.VJ;
     W[J] = (er[J] - e0[J] * sys.VJ) / e1[J];
 
@@ -129,26 +128,26 @@ pair<vector<double>, vector<double>> solveBoxBlockBidiagonal(const BoxSystem& sy
 }
 
 double blackScholesCall(double S, double K, double r, double sigma, double T) {
-    if (T <= 0.0) return max(S - K, 0.0);
-    double d1 = (log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * sqrt(T));
-    double d2 = d1 - sigma * sqrt(T);
-    auto Phi = [](double x) { return 0.5 * erfc(-x / sqrt(2.0)); };
-    return S * Phi(d1) - K * exp(-r * T) * Phi(d2);
+    if (T <= 0.0) return std::max(S - K, 0.0);
+    double d1 = (std::log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * std::sqrt(T));
+    double d2 = d1 - sigma * std::sqrt(T);
+    auto Phi = [](double x) { return 0.5 * std::erfc(-x / std::sqrt(2.0)); };
+    return S * Phi(d1) - K * std::exp(-r * T) * Phi(d2);
 }
 
 // Runs the full time-stepping simulation with the chosen solver (fast block
 // solve, or the O(n^3) dense reference kept for cross-validation).
-pair<vector<double>, vector<double>> runSimulation(int J, int N, double Smax, double K,
+std::pair<std::vector<double>, std::vector<double>> runSimulation(int J, int N, double Smax, double K,
                                                     double sigma, double r, double T,
                                                     bool useDenseReference) {
     const double h = Smax / J;
     const double dtau = T / N;
 
-    vector<double> S(J + 1);
+    std::vector<double> S(J + 1);
     for (int j = 0; j <= J; ++j) S[j] = j * h;
 
-    vector<double> V(J + 1), W(J + 1, 0.0);
-    for (int j = 0; j <= J; ++j) V[j] = max(S[j] - K, 0.0);
+    std::vector<double> V(J + 1), W(J + 1, 0.0);
+    for (int j = 0; j <= J; ++j) V[j] = std::max(S[j] - K, 0.0);
     for (int j = 0; j < J; ++j) W[j] = (V[j + 1] - V[j]) / h;
     W[J] = W[J - 1];
 
@@ -159,7 +158,7 @@ pair<vector<double>, vector<double>> runSimulation(int J, int N, double Smax, do
         sys.p00.resize(J); sys.p01.resize(J); sys.p10.resize(J); sys.p11.resize(J); sys.pr.resize(J);
         sys.q00.resize(J); sys.q01.resize(J); sys.q10.resize(J); sys.q11.resize(J); sys.qr.resize(J);
         sys.V0 = 0.0;
-        sys.VJ = Smax - K * exp(-r * tau_new);
+        sys.VJ = Smax - K * std::exp(-r * tau_new);
 
         for (int j = 0; j < J; ++j) {
             double Sm = 0.5 * (S[j] + S[j + 1]);
@@ -181,8 +180,8 @@ pair<vector<double>, vector<double>> runSimulation(int J, int N, double Smax, do
 
         if (useDenseReference) {
             int n = 2 * (J + 1);
-            vector<vector<double>> A(n, vector<double>(n, 0.0));
-            vector<double> b(n, 0.0);
+            std::vector<std::vector<double>> A(n, std::vector<double>(n, 0.0));
+            std::vector<double> b(n, 0.0);
             A[0][0] = 1.0;
             b[0] = sys.V0;
             for (int j = 0; j < J; ++j) {
@@ -197,7 +196,7 @@ pair<vector<double>, vector<double>> runSimulation(int J, int N, double Smax, do
             }
             A[n - 1][2 * J] = 1.0;
             b[n - 1] = sys.VJ;
-            vector<double> x = solveDenseReference(A, b);
+            std::vector<double> x = solveDenseReference(A, b);
             for (int j = 0; j <= J; ++j) {
                 V[j] = x[2 * j];
                 W[j] = x[2 * j + 1];
@@ -216,29 +215,29 @@ int main() {
     const int J = 200, N = 100;
     const double h = Smax / J;
 
-    vector<double> S(J + 1);
+    std::vector<double> S(J + 1);
     for (int j = 0; j <= J; ++j) S[j] = j * h;
 
     auto [V, W] = runSimulation(J, N, Smax, K, sigma, r, T, /*useDenseReference=*/false);
 
-    cout << fixed << setprecision(6);
-    cout << "Keller Box scheme (O(J) block-bidiagonal solve), K=" << K << " Smax=" << Smax
+    std::cout << std::fixed << std::setprecision(6);
+    std::cout << "Keller Box scheme (O(J) block-bidiagonal solve), K=" << K << " Smax=" << Smax
          << " sigma=" << sigma << " r=" << r << " T=" << T << " (J=" << J << " cells, N=" << N
          << " steps)\n\n";
-    cout << setw(8) << "S" << setw(16) << "V (Box)" << setw(16) << "V (closed form)"
-         << setw(16) << "|error|" << setw(16) << "W = dV/dS" << "\n";
+    std::cout << std::setw(8) << "S" << std::setw(16) << "V (Box)" << std::setw(16) << "V (closed form)"
+         << std::setw(16) << "|error|" << std::setw(16) << "W = dV/dS" << "\n";
     for (int j = 0; j <= J; j += J / 10) {
-        double exact = blackScholesCall(max(S[j], 1e-8), K, r, sigma, T);
-        double err = fabs(V[j] - exact);
-        cout << setw(8) << S[j] << setw(16) << V[j] << setw(16) << exact << setw(16) << err
-             << setw(16) << W[j] << "\n";
+        double exact = blackScholesCall(std::max(S[j], 1e-8), K, r, sigma, T);
+        double err = std::fabs(V[j] - exact);
+        std::cout << std::setw(8) << S[j] << std::setw(16) << V[j] << std::setw(16) << exact << std::setw(16) << err
+             << std::setw(16) << W[j] << "\n";
     }
     double maxErrAll = 0.0;
     for (int j = 1; j < J; ++j) {
         double exact = blackScholesCall(S[j], K, r, sigma, T);
-        maxErrAll = max(maxErrAll, fabs(V[j] - exact));
+        maxErrAll = std::max(maxErrAll, std::fabs(V[j] - exact));
     }
-    cout << "\nmax |V_Box - V_closed_form| over interior nodes = " << maxErrAll << "\n";
+    std::cout << "\nmax |V_Box - V_closed_form| over interior nodes = " << maxErrAll << "\n";
 
     // Cross-validation: an entirely independent O(n^3) dense solve of the
     // identical per-step linear system, run end-to-end, compared against the
@@ -248,12 +247,24 @@ int main() {
     auto [Vref, Wref] = runSimulation(J, N, Smax, K, sigma, r, T, /*useDenseReference=*/true);
     double maxDiffV = 0.0, maxDiffW = 0.0;
     for (int j = 0; j <= J; ++j) {
-        maxDiffV = max(maxDiffV, fabs(V[j] - Vref[j]));
-        maxDiffW = max(maxDiffW, fabs(W[j] - Wref[j]));
+        maxDiffV = std::max(maxDiffV, std::fabs(V[j] - Vref[j]));
+        maxDiffW = std::max(maxDiffW, std::fabs(W[j] - Wref[j]));
     }
-    cout << "\nCross-check vs. an independent O(n^3) dense solve of the identical system:\n";
-    cout << "  max |V_fast - V_dense| = " << scientific << maxDiffV << "\n";
-    cout << "  max |W_fast - W_dense| = " << maxDiffW << fixed << "\n";
+    std::cout << "\nCross-check vs. an independent O(n^3) dense solve of the identical system:\n";
+    std::cout << "  max |V_fast - V_dense| = " << std::scientific << maxDiffV << "\n";
+    std::cout << "  max |W_fast - W_dense| = " << maxDiffW << std::fixed << "\n";
+
+    // Export the full grid (every node, not just every 10th as printed above)
+    // for plotting: computed vs. closed-form value and the pointwise error.
+    std::ofstream out("keller_box_solution.csv");
+    out << std::fixed << std::setprecision(10);
+    out << "S,V_box,V_closed_form,abs_error,W\n";
+    for (int j = 0; j <= J; ++j) {
+        double exact = blackScholesCall(std::max(S[j], 1e-8), K, r, sigma, T);
+        out << S[j] << "," << V[j] << "," << exact << "," << std::fabs(V[j] - exact) << "," << W[j]
+            << "\n";
+    }
+    out.close();
 
     return 0;
 }

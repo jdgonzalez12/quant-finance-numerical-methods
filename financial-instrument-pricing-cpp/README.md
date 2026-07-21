@@ -32,6 +32,23 @@ reference (a dense solve, an iterative solver, or a Monte Carlo simulation) rath
 that "faster" and "correct" coincide — see each subfolder's own "Computational complexity" section for
 the exact operation counts and measured speedups.
 
+## Visual examples
+
+Each program writes its key numerical result to a `.csv`, which a small per-subfolder
+`plot_results.py` script (matplotlib, run once to produce the `.png`) turns into a plot — this
+post-processing step is the only place Python touches this folder; every pricing computation
+itself is pure C++.
+
+| Project | Plot |
+|---|---|
+| `tridiagonal-solvers/` | ![Test 1: both O(J) solvers against the exact solution](tridiagonal-solvers/tridiagonal_solvers_solution.png) |
+| `keller-box-black-scholes/` | ![Keller Box option value vs. closed form](keller-box-black-scholes/keller_box_solution.png) |
+| `exponentially-fitted-scheme/` | ![Centered scheme oscillates, fitted scheme is exact](exponentially-fitted-scheme/exponentially_fitted_scheme_solution.png) |
+| `american-option-lcp-psor/` | ![American put value: PSOR and Brennan-Schwartz agree](american-option-lcp-psor/american_put_value.png) |
+| `adi-two-factor-asian-option/` | ![Arithmetic Asian call value surface](adi-two-factor-asian-option/asian_option_value_surface.png) |
+
+See each subfolder's own README for the full interpretation of what each plot shows.
+
 ## How to build and run
 
 Each subfolder contains a single `.cpp` file with no dependencies beyond the C++17 standard

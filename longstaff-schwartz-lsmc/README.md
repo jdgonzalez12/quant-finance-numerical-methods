@@ -75,3 +75,9 @@ finite-difference benchmark:
 Every case satisfies `European <= American <= finite-difference benchmark` within simulation noise,
 consistent with a strictly positive early-exercise premium. For `S0=36, σ=0.20, T=1`, about 69% of
 paths exercise before maturity rather than holding to expiry.
+
+![Sample paths with realized exercise points, and the distribution of exercise times](lsmc_exercise_behavior.png)
+
+The exercise points cluster where a simulated path has dropped well below the strike and stayed
+there — the visual counterpart of the in-the-money-only regression restriction driving the
+early-exercise decision.

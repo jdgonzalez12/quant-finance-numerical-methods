@@ -52,6 +52,7 @@ Asian-option likelihood-ratio score, which solves the `m x m` linear system `Sig
 | File | Contents |
 |---|---|
 | `greeks_pathwise_likelihood_ratio.ipynb` | Derivations, both estimators, all three payoffs, closed-form/finite-difference cross-checks |
+| `greeks_delta_estimator_comparison.png` | Bar-chart comparison of closed-form, pathwise, and likelihood-ratio delta estimates across the three payoffs |
 
 ## How to build and run
 
@@ -72,3 +73,9 @@ The Asian-option pathwise estimate agrees exactly with a central finite-differen
 the same underlying random numbers (0.541952 both), and the likelihood-ratio estimate agrees with both
 to within its own Monte Carlo standard error. The digital case is the central result: the pathwise
 method is not merely less efficient there, it is structurally blind to the option's actual sensitivity.
+
+![Bar-chart comparison of closed-form, pathwise, and likelihood-ratio delta estimates across the three payoffs](greeks_delta_estimator_comparison.png)
+
+The digital call's pathwise bar is visibly absent (identically zero) while its likelihood-ratio bar
+sits flush against the closed-form reference — the same structural failure the table above states
+numerically, made immediate at a glance.

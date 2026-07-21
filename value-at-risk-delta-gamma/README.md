@@ -98,6 +98,7 @@ tail probability reuses the *same* `n_mc` scenarios already drawn for the full M
 | File | Contents |
 |---|---|
 | `value_at_risk_delta_gamma.ipynb` | Portfolio setup, diagonalization, transform inversion, full Monte Carlo, control-variate estimator |
+| `var_loss_distribution.png` | Simulated loss histogram with both VaR₀.₉₉ estimates marked |
 
 ## How to build and run
 
@@ -117,3 +118,9 @@ true loss closely at this horizon. The two VaR estimates:
 using $Q$ as a control variate to re-estimate $P(L>\mathrm{VaR}_{mc})$ (target $0.01$) achieves a
 **5.98× variance reduction** over the naive indicator average — consistent with Glasserman's
 reported typical range of a factor of 2–5 for this technique.
+
+![Simulated loss histogram with the full Monte Carlo and delta-gamma semi-analytic VaR_0.99 estimates marked](var_loss_distribution.png)
+
+The gap between the two vertical lines is the delta-gamma approximation's bias at this horizon —
+visually small relative to the spread of the loss distribution itself, consistent with the
+`Corr(L,Q) = 0.9946` reported above.

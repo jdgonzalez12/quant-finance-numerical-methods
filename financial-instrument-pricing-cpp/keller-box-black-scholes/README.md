@@ -87,7 +87,9 @@ the forward-sweep's stored reduction coefficients).
 
 | File | Contents |
 |---|---|
-| `keller_box_black_scholes.cpp` | Box-scheme solver, dense linear solve, comparison against the closed-form price |
+| `keller_box_black_scholes.cpp` | Box-scheme solver, dense linear solve, comparison against the closed-form price, writes `keller_box_solution.csv` |
+| `keller_box_solution.csv` | `S`, Box-scheme `V`, closed-form `V`, `W` at every grid node |
+| `plot_results.py` | Reads the CSV and renders `keller_box_solution.png` (post-processing only — the pricing computation above is pure C++) |
 
 ## How to build and run
 
@@ -109,3 +111,11 @@ the price computed afterward. The `O(J)` block-bidiagonal solve and the `O(J^3)`
 run end-to-end as two entirely independent simulations of the same system, agree to `max|V_fast -
 V_dense| = 1.4e-14` and `max|W_fast - W_dense| = 2.8e-14` — floating-point round-off, not an
 approximation.
+
+![Keller Box option value vs. closed form, and the pointwise error across the grid](keller_box_solution.png)
+
+The left panel's Box-scheme points sit exactly on the closed-form curve at every plotted node; the
+right panel's log-scale error trace shows the mismatch is at the `1e-3`-to-`1e-6` level throughout
+the interior (the discretization error of a `J=200` grid, not a solver defect) and drops back to
+floating-point noise near `S=0`, where the option value itself is identically zero to machine
+precision.

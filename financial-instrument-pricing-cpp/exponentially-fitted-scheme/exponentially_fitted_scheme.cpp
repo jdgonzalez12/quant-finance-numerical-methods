@@ -19,19 +19,18 @@
 // convection-dominated regime of the Black-Scholes PDE.
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <utility>
 #include <vector>
 
-using namespace std;
-
 // Thomas algorithm for Au = f with a[j]u_{j-1}+b[j]u_j+c[j]u_{j+1}=f[j].
 // a, c are read-only (taken by const reference); b, f are consumed in place
-// into caller-provided scratch buffers so no vector is copied or freed on
+// into caller-provided scratch buffers so no std::vector is copied or freed on
 // this routine's own account -- it is called once per time step here.
-void solveTridiagonalInPlace(const vector<double>& a, vector<double>& b,
-                              const vector<double>& c, vector<double>& f, vector<double>& u) {
+void solveTridiagonalInPlace(const std::vector<double>& a, std::vector<double>& b,
+                              const std::vector<double>& c, std::vector<double>& f, std::vector<double>& u) {
     int n = static_cast<int>(b.size());
     for (int j = 1; j < n; ++j) {
         double m = a[j] / b[j - 1];
@@ -51,16 +50,16 @@ double cothStable(double x) {
     //   |x| large: e^{2x} overflows to +inf in IEEE double once x gtr ~355,
     //   giving inf/inf = NaN, even though coth(x) -> sign(x) exactly in that
     //   regime (the true function has no singularity there at all).
-    if (fabs(x) < 1e-8) return 1.0 / x + x / 3.0;
+    if (std::fabs(x) < 1e-8) return 1.0 / x + x / 3.0;
     if (x > 20.0) return 1.0;
     if (x < -20.0) return -1.0;
-    return (exp(2 * x) + 1) / (exp(2 * x) - 1);
+    return (std::exp(2 * x) + 1) / (std::exp(2 * x) - 1);
 }
 
 // ---------------------------------------------------------------------
 // Part A: sigma*u'' + mu*u' = 0 on (A,B), u(A)=beta0, u(B)=beta1.
-// Exact solution: u(x) = beta0 + (beta1-beta0) * (1-exp(-mu*(x-A)/sigma)) /
-//                                                 (1-exp(-mu*(B-A)/sigma)).
+// Exact solution: u(x) = beta0 + (beta1-beta0) * (1-std::exp(-mu*(x-A)/sigma)) /
+//                                                 (1-std::exp(-mu*(B-A)/sigma)).
 // ---------------------------------------------------------------------
 void partA() {
     const double sigma = 0.01, mu = 1.0, A = 0.0, B = 1.0, beta0 = 0.0, beta1 = 1.0;
@@ -68,18 +67,18 @@ void partA() {
     const double h = (B - A) / J;
     const double Pe = mu * h / (2 * sigma);  // cell Peclet number
 
-    vector<double> x(J + 1);
+    std::vector<double> x(J + 1);
     for (int j = 0; j <= J; ++j) x[j] = A + j * h;
 
     auto exact = [&](double xx) {
-        return beta0 + (beta1 - beta0) * (1 - exp(-mu * (xx - A) / sigma)) /
-                           (1 - exp(-mu * (B - A) / sigma));
+        return beta0 + (beta1 - beta0) * (1 - std::exp(-mu * (xx - A) / sigma)) /
+                           (1 - std::exp(-mu * (B - A) / sigma));
     };
 
     // Standard centered scheme (rho = 1):
     //   sigma*(U_{j-1}-2U_j+U_{j+1})/h^2 + mu*(U_{j+1}-U_{j-1})/(2h) = 0
     int n = J - 1;
-    vector<double> a(n), b(n), c(n), f(n, 0.0);
+    std::vector<double> a(n), b(n), c(n), f(n, 0.0);
     for (int j = 1; j <= n; ++j) {
         a[j - 1] = sigma / (h * h) - mu / (2 * h);
         b[j - 1] = -2 * sigma / (h * h);
@@ -87,13 +86,13 @@ void partA() {
     }
     f[0] -= a[0] * beta0;
     f[n - 1] -= c[n - 1] * beta1;
-    vector<double> Ucentered(n);
+    std::vector<double> Ucentered(n);
     solveTridiagonalInPlace(a, b, c, f, Ucentered);
 
     // Exponentially fitted scheme:
     //   sigma*rho*(U_{j-1}-2U_j+U_{j+1})/h^2 + mu*(U_{j+1}-U_{j-1})/(2h) = 0
     double rho = cothStable(Pe) * Pe;
-    vector<double> af(n), bf(n), cf(n), ff(n, 0.0);
+    std::vector<double> af(n), bf(n), cf(n), ff(n, 0.0);
     for (int j = 1; j <= n; ++j) {
         af[j - 1] = sigma * rho / (h * h) - mu / (2 * h);
         bf[j - 1] = -2 * sigma * rho / (h * h);
@@ -101,26 +100,26 @@ void partA() {
     }
     ff[0] -= af[0] * beta0;
     ff[n - 1] -= cf[n - 1] * beta1;
-    vector<double> Ufitted(n);
+    std::vector<double> Ufitted(n);
     solveTridiagonalInPlace(af, bf, cf, ff, Ufitted);
 
-    cout << fixed << setprecision(8);
-    cout << "Part A: sigma*u'' + mu*u' = 0, sigma=" << sigma << " mu=" << mu << " (J=" << J
+    std::cout << std::fixed << std::setprecision(8);
+    std::cout << "Part A: sigma*u'' + mu*u' = 0, sigma=" << sigma << " mu=" << mu << " (J=" << J
          << ", cell Peclet number = " << Pe << ")\n\n";
-    cout << setw(8) << "x" << setw(14) << "exact" << setw(16) << "centered"
-         << setw(16) << "|err| centered" << setw(14) << "fitted" << setw(16)
+    std::cout << std::setw(8) << "x" << std::setw(14) << "exact" << std::setw(16) << "centered"
+         << std::setw(16) << "|err| centered" << std::setw(14) << "fitted" << std::setw(16)
          << "|err| fitted" << "\n";
     double maxErrC = 0.0, maxErrF = 0.0;
     for (int j = 0; j <= J; ++j) {
         double ex = exact(x[j]);
         double uc = (j == 0) ? beta0 : (j == J ? beta1 : Ucentered[j - 1]);
         double uf = (j == 0) ? beta0 : (j == J ? beta1 : Ufitted[j - 1]);
-        maxErrC = max(maxErrC, fabs(uc - ex));
-        maxErrF = max(maxErrF, fabs(uf - ex));
-        cout << setw(8) << x[j] << setw(14) << ex << setw(16) << uc << setw(16)
-             << fabs(uc - ex) << setw(14) << uf << setw(16) << fabs(uf - ex) << "\n";
+        maxErrC = std::max(maxErrC, std::fabs(uc - ex));
+        maxErrF = std::max(maxErrF, std::fabs(uf - ex));
+        std::cout << std::setw(8) << x[j] << std::setw(14) << ex << std::setw(16) << uc << std::setw(16)
+             << std::fabs(uc - ex) << std::setw(14) << uf << std::setw(16) << std::fabs(uf - ex) << "\n";
     }
-    cout << "\nmax |error|: centered = " << maxErrC << ",  fitted = " << maxErrF
+    std::cout << "\nmax |error|: centered = " << maxErrC << ",  fitted = " << maxErrF
          << "  (fitted is exact at mesh points up to floating-point round-off,\n"
          << "   the classical Il'in result for constant-coefficient problems)\n\n";
 
@@ -128,7 +127,7 @@ void partA() {
     // (u ranges from 0 to 1 with mu>0, sigma>0 and no interior extremum);
     // count sign changes in consecutive differences as a proxy for spurious
     // oscillation.
-    auto countSignChanges = [](const vector<double>& v) {
+    auto countSignChanges = [](const std::vector<double>& v) {
         int count = 0;
         for (size_t i = 2; i < v.size(); ++i) {
             double d1 = v[i - 1] - v[i - 2], d2 = v[i] - v[i - 1];
@@ -136,14 +135,26 @@ void partA() {
         }
         return count;
     };
-    vector<double> fullC(J + 1), fullF(J + 1);
+    std::vector<double> fullC(J + 1), fullF(J + 1);
     for (int j = 0; j <= J; ++j) {
         fullC[j] = (j == 0) ? beta0 : (j == J ? beta1 : Ucentered[j - 1]);
         fullF[j] = (j == 0) ? beta0 : (j == J ? beta1 : Ufitted[j - 1]);
     }
-    cout << "Sign changes in consecutive differences (0 = monotone, >0 = oscillatory): "
+    std::cout << "Sign changes in consecutive differences (0 = monotone, >0 = oscillatory): "
          << "centered = " << countSignChanges(fullC) << ", fitted = " << countSignChanges(fullF)
          << "\n\n";
+
+    // Export the full grid for plotting: the centered scheme's spurious
+    // oscillation (cell Peclet number Pe > 1 here) against the exponentially
+    // fitted scheme's near-exact, monotone solution.
+    std::ofstream out("part_a_solution.csv");
+    out << std::fixed << std::setprecision(10);
+    out << "x,exact,centered,fitted\n";
+    for (int j = 0; j <= J; ++j) {
+        double ex = exact(x[j]);
+        out << x[j] << "," << ex << "," << fullC[j] << "," << fullF[j] << "\n";
+    }
+    out.close();
 }
 
 // ---------------------------------------------------------------------
@@ -160,7 +171,7 @@ void partB() {
                                       // diffusion damps it out over many steps.
     const double h = Smax / J, dtau = T / N;
 
-    vector<double> S(J + 1);
+    std::vector<double> S(J + 1);
     for (int j = 0; j <= J; ++j) S[j] = j * h;
 
     // Runs the full N-step time march in a single pass, snapshotting the grid
@@ -171,12 +182,12 @@ void partB() {
     // buffers are allocated once, outside the time loop, and reused every
     // step rather than reallocated N times.
     auto runScheme = [&](bool fitted, int stepsToRun, int snapshotAt) {
-        vector<double> V(J + 1);
-        for (int j = 0; j <= J; ++j) V[j] = max(S[j] - K, 0.0);
-        vector<double> Vsnapshot;
+        std::vector<double> V(J + 1);
+        for (int j = 0; j <= J; ++j) V[j] = std::max(S[j] - K, 0.0);
+        std::vector<double> Vsnapshot;
 
         int n = J - 1;
-        vector<double> aImp(n), bImp(n), cImp(n), fRHS(n), Vnew(n);
+        std::vector<double> aImp(n), bImp(n), cImp(n), fRHS(n), Vnew(n);
         for (int step = 0; step < stepsToRun; ++step) {
             double tau = (step + 1) * dtau;
             // Crank-Nicolson: (I - dtau/2 L) V^{n+1} = (I + dtau/2 L) V^n,
@@ -208,7 +219,7 @@ void partB() {
             }
             // V(0,*)=0 at both time levels, so the j=1 equation needs no extra
             // boundary correction beyond the V[j-1]=0 already used above.
-            double VmaxNew = Smax - K * exp(-r * tau);
+            double VmaxNew = Smax - K * std::exp(-r * tau);
             fRHS[n - 1] += -cImp[n - 1] * VmaxNew;  // implicit-level boundary term
             // (the explicit-level boundary term used V[J]=VmaxOld directly,
             // since V[J] is only overwritten with VmaxNew after this solve)
@@ -220,13 +231,13 @@ void partB() {
 
             if (step + 1 == snapshotAt) Vsnapshot = V;
         }
-        return make_pair(Vsnapshot, V);
+        return std::make_pair(Vsnapshot, V);
     };
 
     auto [Vcentered, VcenteredFinal] = runScheme(false, N, reportAfterSteps);
     auto [Vfitted, VfittedFinal] = runScheme(true, N, reportAfterSteps);
 
-    auto countSignChanges = [](const vector<double>& v, int lo, int hi) {
+    auto countSignChanges = [](const std::vector<double>& v, int lo, int hi) {
         int count = 0;
         for (int i = lo + 1; i < hi; ++i) {
             double d1 = v[i] - v[i - 1], d2 = v[i + 1] - v[i];
@@ -236,27 +247,27 @@ void partB() {
     };
     // Look for oscillation in the region around the kink S=K, where the
     // payoff's discontinuous second derivative most strongly excites it.
-    int jK = static_cast<int>(round(K / h));
-    int lo = max(1, jK - 12), hi = min(J - 1, jK + 12);
+    int jK = static_cast<int>(std::round(K / h));
+    int lo = std::max(1, jK - 12), hi = std::min(J - 1, jK + 12);
 
-    cout << "Part B: Black-Scholes, sigma=" << sigma << " r=" << r
+    std::cout << "Part B: Black-Scholes, sigma=" << sigma << " r=" << r
          << " (convection-dominated: cell Peclet number at S=Smax is "
          << (r * Smax * h) / (sigma * sigma * Smax * Smax) << ")\n\n";
-    cout << "After " << reportAfterSteps << " implicit time step(s) (the payoff kink has just "
+    std::cout << "After " << reportAfterSteps << " implicit time step(s) (the payoff kink has just "
          << "been imposed and not yet smoothed away):\n";
-    cout << setw(8) << "S" << setw(16) << "V (centered)" << setw(16) << "V (fitted)" << "\n";
+    std::cout << std::setw(8) << "S" << std::setw(16) << "V (centered)" << std::setw(16) << "V (fitted)" << "\n";
     for (int j = lo; j <= hi; ++j)
-        cout << setw(8) << S[j] << setw(16) << Vcentered[j] << setw(16) << Vfitted[j] << "\n";
-    cout << "\nSign changes near the kink S=K (region [" << S[lo] << "," << S[hi]
+        std::cout << std::setw(8) << S[j] << std::setw(16) << Vcentered[j] << std::setw(16) << Vfitted[j] << "\n";
+    std::cout << "\nSign changes near the kink S=K (region [" << S[lo] << "," << S[hi]
          << "]): centered = " << countSignChanges(Vcentered, lo, hi)
          << ", fitted = " << countSignChanges(Vfitted, lo, hi) << "\n";
 
-    cout << "\nAfter all " << N << " steps (T=" << T << "), for comparison:\n";
-    cout << setw(8) << "S" << setw(16) << "V (centered)" << setw(16) << "V (fitted)" << "\n";
+    std::cout << "\nAfter all " << N << " steps (T=" << T << "), for comparison:\n";
+    std::cout << std::setw(8) << "S" << std::setw(16) << "V (centered)" << std::setw(16) << "V (fitted)" << "\n";
     for (int j = lo; j <= hi; ++j)
-        cout << setw(8) << S[j] << setw(16) << VcenteredFinal[j] << setw(16) << VfittedFinal[j]
+        std::cout << std::setw(8) << S[j] << std::setw(16) << VcenteredFinal[j] << std::setw(16) << VfittedFinal[j]
              << "\n";
-    cout << "Sign changes near the kink at T: centered = "
+    std::cout << "Sign changes near the kink at T: centered = "
          << countSignChanges(VcenteredFinal, lo, hi)
          << ", fitted = " << countSignChanges(VfittedFinal, lo, hi) << "\n";
 
@@ -264,18 +275,18 @@ void partB() {
     // in the price itself (a non-smooth payoff's second derivative is what
     // actually excites it) -- so check the discrete delta dV/dS for spurious
     // non-monotonicity too, not just the price level.
-    auto delta = [&](const vector<double>& V) {
-        vector<double> d(J + 1, 0.0);
+    auto delta = [&](const std::vector<double>& V) {
+        std::vector<double> d(J + 1, 0.0);
         for (int j = 1; j < J; ++j) d[j] = (V[j + 1] - V[j - 1]) / (2 * h);
         return d;
     };
-    vector<double> deltaC = delta(VcenteredFinal), deltaF = delta(VfittedFinal);
-    cout << "\nDiscrete delta dV/dS near the kink:\n";
-    cout << setw(8) << "S" << setw(16) << "delta (centered)" << setw(16) << "delta (fitted)"
+    std::vector<double> deltaC = delta(VcenteredFinal), deltaF = delta(VfittedFinal);
+    std::cout << "\nDiscrete delta dV/dS near the kink:\n";
+    std::cout << std::setw(8) << "S" << std::setw(16) << "delta (centered)" << std::setw(16) << "delta (fitted)"
          << "\n";
     for (int j = lo; j <= hi; ++j)
-        cout << setw(8) << S[j] << setw(16) << deltaC[j] << setw(16) << deltaF[j] << "\n";
-    cout << "Sign changes in delta near the kink: centered = "
+        std::cout << std::setw(8) << S[j] << std::setw(16) << deltaC[j] << std::setw(16) << deltaF[j] << "\n";
+    std::cout << "Sign changes in delta near the kink: centered = "
          << countSignChanges(deltaC, lo, hi) << ", fitted = " << countSignChanges(deltaF, lo, hi)
          << "\n";
 }

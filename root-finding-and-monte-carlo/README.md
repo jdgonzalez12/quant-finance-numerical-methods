@@ -70,6 +70,12 @@ direct choice `g(x) = f(x) + x`.
 **4. Newton-Raphson for a 2D nonlinear system**: `sin(e^(x^2-y^2)) - 3y = 0` and
 `cos(cos(xy^3)) - 3x^2y = 0`, solved with a numerically approximated Jacobian.
 
+![Bisection and false-position roots for problem 1](bisection_vs_false_position_survey.png)
+
+Both methods land on the same root of a function with several sign changes on `[0,2]`, visual
+confirmation that the bracket passed to each method contains the specific root reported rather
+than one of the function's other crossings.
+
 ## Fixed-point iteration vs. Newton's method
 
 Four independent equations, each solved with both open methods. For fixed-point iteration, when
@@ -82,6 +88,15 @@ iterations needed across a sweep of target errors from `1e-2` down to `1e-12`.
 - c) `1/2 + x^2/4 - x*sin(x) - cos(2x)/2 = 0`
 - d) `1564 = 1000e^x + 435(e^x - 1)/x`
 
+![Newton's method root and iteration count vs. target error for equation (a)](newton_method_root.png)
+
+![Iterations vs. target error, Newton's method, equation (a)](newton_method_iterations_vs_error.png)
+
+The iteration-count curve is visibly flat on a log-`x` axis until it steps up by only one or two
+iterations per four-order-of-magnitude tightening of the tolerance — the graphical signature of
+Newton's `O(log log(1/tol))` scaling, doubling correct digits each step rather than accumulating
+them linearly.
+
 ## Newton-Raphson for nonlinear systems
 
 Three systems of increasing dimension, each solved with the multivariate Newton-Raphson method
@@ -91,6 +106,12 @@ using a numerically approximated Jacobian.
 - **B.** `y + x^2 - 0.5 = 4` and `y = x^2 - 5xy`.
 - **C.** A 3x3 system: `3x - cos(yz) - 1/2 = 0`, `4x^2 - 625y^2 + 2y - 1 = 0`,
   `e^(-xy) + 20z + (10*pi - 3)/3 = 0`.
+
+![The two circles of problem A and their Newton-Raphson-located intersection](circles_intersection.png)
+
+The 2D root the notebook's interactive solver reports is exactly the geometric intersection of
+the two circles — the Jacobian-based linear step converges to the same point regardless of which
+of the two symmetric intersection points the initial guess is closer to.
 
 ## Bisection, false position, and a hybrid method
 
@@ -103,6 +124,16 @@ Each case reports iterations vs. target error from `1e-2` down to `1e-12`.
 - c) `2x*cos(x) - (x+1)^2 = 0`
 - d) `e^x - 2 = cos(e^x - 2)`
 
+![Bisection, false position, and hybrid roots for equation (a)](bisection_false_position_root.png)
+
+![Iterations vs. target error, all three methods, equation (a)](bisection_false_position_iterations_vs_error.png)
+
+All three methods agree on the same root, but the iteration-count plot separates them clearly:
+bisection's curve is the theoretical `log2((b-a)/tol)` line exactly, while false position's curve
+sits above it once its secant construction starts stalling near the root — the hybrid method's
+curve tracks false position where it is faster and drops back to bisection's bound exactly where
+the hybrid's hard switch triggers.
+
 ## Applied root-finding problems
 
 Three applied engineering problems, each reduced to a single-variable root-finding equation and
@@ -112,6 +143,10 @@ solved with an open method.
 `Q = (1/n)*(BH)^(5/3)*S^(1/2) / (B+2H)^(2/3)` for the channel height `H` required to drain
 50 m³/s over a 35 m-wide channel with roughness 0.045 and slope not exceeding 0.1°, via Newton's
 method.
+
+![Manning's-equation root via Newton's method](manning_equation_root.png)
+
+![Iterations vs. target error, Manning's equation](manning_equation_iterations_vs_error.png)
 
 **B. Equilibrium angle of a loaded bar.** A bar under a 200 lb weight, a 100 lb-ft couple moment,
 and a spring (unstretched length 2 ft, `k = 50` lb/ft) is analyzed down to
@@ -132,3 +167,12 @@ high-accuracy reference (`scipy.integrate.quad`). For each case, percent error i
 - b) `∫₀^5 [2x*cos(2x) - (x-2)²] dx`
 - c) `∫₀^48 sqrt(1 + cos³(x)) dx`
 - d) `∫_e^2e 1/(x*ln(x)) dx`
+
+![Rejection-sampling points for integral (a) at n=10,000](monte_carlo_rejection_sampling.png)
+
+![Percent error vs. n, integral (a)](monte_carlo_error_vs_n.png)
+
+The scatter plot shows the rejection-sampling mechanism directly: points falling under `f(x)` (blue)
+vs. above it (red) within the bounding rectangle, whose ratio *is* the Monte Carlo estimate. The
+error-vs-`n` plot's roughly `-1/2` slope on log-log axes is the `O(1/\sqrt N)` rate measured
+directly rather than only asserted.

@@ -101,6 +101,14 @@ converges cleanly toward it as the grid is refined:
 The value-surface plot shows a smooth, non-oscillating `U(S,v)` across the full price/variance
 range, as expected from an unconditionally stable ADI scheme.
 
+![Option value surface U(S,v) at t=0](heston_value_surface.png)
+
+![Absolute error vs. grid resolution, checked against the semi-analytical price](heston_adi_convergence.png)
+
+The convergence plot's error curve tracks the four grid resolutions in the table above, visually
+confirming the monotone convergence toward the semi-analytical reference price as `(M,N,\text{steps})`
+are refined together.
+
 ## Computational complexity and efficiency
 
 Each time step costs `O(M*N)`: one full-grid evaluation of `A0+A1+A2` for the explicit predictor,

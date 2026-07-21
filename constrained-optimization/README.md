@@ -11,6 +11,17 @@ portfolio construction and a classical nonlinear test problem.
 | [`interior_point_method.ipynb`](interior_point_method.ipynb) | The same portfolio problem with a long-only (`w >= 0`) constraint, solved with a primal-dual interior-point method |
 | [`sequential_quadratic_programming.ipynb`](sequential_quadratic_programming.ipynb) | Hock-Schittkowski problem 71, solved with SQP using an interior-point QP subproblem solver |
 
+## Files
+
+| File | Contents |
+|---|---|
+| `quadratic_programming.ipynb` | Mean-variance QP, efficient frontier, plot |
+| `interior_point_method.ipynb` | Long-only interior-point solve, convergence plot |
+| `sequential_quadratic_programming.ipynb` | SQP on HS71, convergence plot |
+| `markowitz_efficient_frontier.png` | Efficient frontier with the minimum-variance point marked |
+| `interior_point_convergence.png` | Duality gap and residual norms vs. iteration |
+| `sqp_convergence.png` | Objective value and constraint violation vs. iteration |
+
 ## How to build and run
 
 Each notebook is self-contained: open it in Jupyter Notebook/Lab or VS Code and run all cells in
@@ -26,6 +37,8 @@ needed for an equality-only QP). Sweeping `r_target` over the feasible range tra
 Markowitz efficient frontier; the minimum-variance point falls at `r approx 0.0953`,
 `std approx 0.1061`.
 
+![Markowitz efficient frontier with the minimum-variance point and the five individual assets marked](markowitz_efficient_frontier.png)
+
 ## Interior-point method
 
 Adds a long-only constraint `w >= 0` to the same portfolio problem, which does introduce an
@@ -35,6 +48,8 @@ step control) drives the duality gap from `2e-1` to below `1e-10` in 19 iteratio
 tested target return, the constraint activates on the lowest-return asset (its weight is driven
 to exactly `0`), raising the achievable variance slightly above the unconstrained optimum
 (`0.017851` vs. `0.017839`) — the expected effect of a binding inequality constraint.
+
+![Duality gap and primal/dual residual norms vs. iteration, on a log scale](interior_point_convergence.png)
 
 ## Sequential quadratic programming
 
@@ -53,6 +68,12 @@ notebook (extended to a general linear inequality via a slack variable), and glo
 with a backtracking line search on the L1 exact penalty function. The iterates converge to
 `f(x*) = 17.0140173`, matching the published optimum, with `x*` within `6e-5` of the reference
 solution `(1, 4.7429994, 3.8211503, 1.3794082)`.
+
+![Objective value and equality-constraint violation vs. SQP iteration](sqp_convergence.png)
+
+The constraint-violation panel's log scale makes the local quadratic convergence visible directly:
+once the iterates are close enough to feasibility, each SQP step roughly squares the residual
+rather than merely shrinking it by a fixed factor.
 
 ## Computational complexity
 

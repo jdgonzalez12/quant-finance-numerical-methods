@@ -62,3 +62,9 @@ paths): sample correlation `ρ̂ ≈ 0.9998`, giving an empirical variance-reduc
 (1.987 vs. 1.983), but the controlled estimator's standard error is about 50× smaller, and the
 simulated geometric-average price (1.935) matches the closed-form Kemna–Vorst price (1.931) to within
 Monte Carlo noise.
+
+![Arithmetic vs. geometric discounted payoffs across simulated paths](control_variate_scatter.png)
+
+The near-perfectly linear scatter of the arithmetic payoff against the geometric one is the visual
+signature of `ρ̂ ≈ 0.9998`: a control variate this tightly correlated with the target is exactly
+the regime in which the variance-reduction ratio `1/(1-ρ̂²)` blows up.

@@ -88,7 +88,9 @@ is copied or reallocated per call.
 
 | File | Contents |
 |---|---|
-| `tridiagonal_solvers.cpp` | Both solvers, three validation problems, and the diagonal-dominance discussion above realized in code |
+| `tridiagonal_solvers.cpp` | Both solvers, three validation problems, and the diagonal-dominance discussion above realized in code. Writes `test1_solution.csv` |
+| `test1_solution.csv` | Test 1: `x`, exact, LU, and double-sweep solutions at every grid node |
+| `plot_results.py` | Reads the CSV and renders `tridiagonal_solvers_solution.png` (post-processing only — both solvers above are pure C++) |
 
 ## How to build and run
 
@@ -112,3 +114,10 @@ no accumulating error.
 **Test 3** (`u'' - u = -1` on `(0,1)`, `u(0)=u(1)=0`, exact solution
 `u(x) = 1 - cosh(x-1/2)/cosh(1/2)`, `J=40`): LU and the double sweep again agree exactly with each
 other and match the closed form to `O(h^2)`.
+
+![Test 1: both O(J) solvers against the exact solution, and their error](tridiagonal_solvers_solution.png)
+
+The left panel's solver markers sit exactly on the exact-solution curve at plotted resolution; the
+right panel's log-scale error trace is the smooth, single-humped shape expected of an `O(h^2)`
+central-difference truncation error on a smooth solution — no jaggedness or sign-dependent
+structure, since both solvers are algebraically the same factorization computed two different ways.

@@ -31,6 +31,8 @@ filtered estimate's RMSE is well below the raw observation noise, and the mean n
 innovation squared falls inside its theoretical 95% band — confirming the filter's reported
 covariance is calibrated, not just that the trajectory looks visually close to the truth.
 
+![True trajectory, noisy observations, and the Kalman-filtered estimate, alongside the NIS consistency check over time](kalman_filter_tracking_and_nis.png)
+
 ## Extended vs. unscented Kalman filter
 
 Derives the EKF's Jacobian-linearized update and the UKF's sigma-point unscented transform, then
@@ -44,6 +46,14 @@ about the nonlinearity" is not the same claim as "is more accurate." The observa
 evaluated at all $2n+1$ sigma points in one vectorized array expression rather than one Python
 function call per point.
 
+![EKF vs. UKF tracking at moderate initial uncertainty: statistically indistinguishable](ekf_vs_ukf_moderate_uncertainty.png)
+
+![EKF vs. UKF tracking at large initial uncertainty: EKF measurably beats UKF near the sensor singularity](ekf_vs_ukf_high_uncertainty.png)
+
+Both trajectories look close to the truth in the first plot; the second makes the failure mode
+visible — the UKF's estimate visibly drifts further from the true path than the EKF's as the sigma
+points sample too close to the sensor.
+
 ## Particle filter
 
 Derives sequential importance sampling and the bootstrap filter's simplified weight update, then
@@ -54,6 +64,14 @@ data (17.03), and a direct snapshot of the filtering posterior at an ambiguous-s
 shows the particle filter's weighted histogram capturing both modes while the EKF reports a single
 Gaussian centered at one of them — a structural difference in what each filter can represent, not
 just a difference in point-estimate accuracy.
+
+![Particle filter vs. EKF filtered state, and effective sample size over time with the resampling threshold](particle_filter_tracking_and_ess.png)
+
+![Filtering posterior at an ambiguous-sign observation: particle filter's bimodal weighted histogram vs. the EKF's single Gaussian](particle_filter_bimodal_posterior.png)
+
+The second plot is the central result made visible: the true state (dashed line) sits under one of
+two particle-filter modes, while the EKF's single Gaussian is forced to commit to a compromise
+between them.
 
 ## Hidden Markov models
 
@@ -70,6 +88,13 @@ is computed as a single $K\times K$ matrix product against a $(T-1)\times K$ arr
 a $T-1$-iteration Python loop over the same sum — identical arithmetic, carried out as one
 BLAS-backed matrix multiply instead of many small interpreted steps, which matters because this
 sum is recomputed once per EM iteration.
+
+![Observations with the true high-volatility regime shaded and the Viterbi-recovered regime calls marked](hmm_regime_path.png)
+
+![Baum-Welch observed-data log-likelihood over EM iterations, from a randomly perturbed initialization](hmm_baum_welch_loglikelihood.png)
+
+The log-likelihood curve is the direct visual check of the EM ascent property claimed above: it
+rises monotonically (up to floating-point noise) rather than merely trending upward on average.
 
 ## Computational complexity
 

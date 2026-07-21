@@ -35,6 +35,13 @@ factor cancels between the prior and view precisions), so `tau` only ever scales
 uncertainty covariance added on top of the return covariance — it is not, by itself, a second knob
 back to equilibrium.
 
+![Portfolio weight interpolation between market equilibrium and the view-implied optimum as view confidence varies](black_litterman_interpolation.png)
+
+At `c=0` (no confidence in the view) the weights sit exactly at `w_mkt`; as `c` grows the curve
+bends monotonically toward the view-implied optimum, with no overshoot — the visual signature of
+`mu_BL` being a precision-weighted *average* of the prior and the view, which can only pull the
+posterior mean between the two, never past either one.
+
 ## Nearest correlation matrix via semidefinite programming
 
 States the nearest-correlation-matrix problem in its standard SDP form (minimize the Frobenius
@@ -50,6 +57,13 @@ tolerance. Run alongside plain (uncorrected) alternating projection on the same 
 feasible points turn out to be numerically close for this instance; the notebook is explicit about
 what the Dykstra correction actually guarantees — an unconditional proof of Frobenius-optimality —
 rather than overstating the size of the empirical gap it happened to produce here.
+
+![Frobenius-distance convergence of the Dykstra-corrected projection toward the nearest correlation matrix](nearest_correlation_matrix_convergence.png)
+
+The distance to the (unknown) true nearest matrix drops sharply in the first few iterations and
+then flattens well before `max_iter`, the expected shape for an alternating-projection method:
+each projection is a contraction, so most of the correction happens early, and the tail of the
+curve is the algorithm polishing a solution it has already essentially found.
 
 ## Computational complexity
 

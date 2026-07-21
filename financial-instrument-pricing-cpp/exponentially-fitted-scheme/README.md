@@ -79,7 +79,9 @@ reallocated `N` times.
 
 | File | Contents |
 |---|---|
-| `exponentially_fitted_scheme.cpp` | Part A: exact reproduction of the constant-coefficient ODE result. Part B: fitted vs. centered Crank-Nicolson applied to Black-Scholes in a convection-dominated regime |
+| `exponentially_fitted_scheme.cpp` | Part A: exact reproduction of the constant-coefficient ODE result. Part B: fitted vs. centered Crank-Nicolson applied to Black-Scholes in a convection-dominated regime. Writes `part_a_solution.csv` |
+| `part_a_solution.csv` | Part A: `x`, exact, centered, and fitted solutions at every grid node |
+| `plot_results.py` | Reads the CSV and renders `exponentially_fitted_scheme_solution.png` (post-processing only — the scheme itself is pure C++) |
 
 ## How to build and run
 
@@ -104,3 +106,10 @@ and `1.23` around the strike (11 sign changes in its consecutive differences), w
 scheme's delta rises monotonically and saturates at exactly `1.0` (a single sign change, at the
 floating-point noise floor) — precisely the "more pronounced in the delta" failure mode the method
 was designed to remove.
+
+![Part A: exact, centered, and fitted solutions of sigma*u'' + mu*u' = 0](exponentially_fitted_scheme_solution.png)
+
+The centered scheme's trace visibly overshoots and undershoots the flat exact solution near the
+boundary layer at `x=0` before the oscillation damps out toward `x=1`; the fitted scheme's markers
+sit on top of the exact curve everywhere, with no visible deviation at any plotted node — the
+Peclet-number failure mode made directly visible rather than only reported as an error norm.

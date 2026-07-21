@@ -98,6 +98,7 @@ pattern would have made.
 |---|---|
 | `adi_two_factor_asian_option.cpp` | Grid setup, two-stage ADI solver, Monte Carlo cross-check reference |
 | `asian_option_value_surface.csv` | `V(S, A)` at `t=0` over the computed grid (subsampled every 2nd node) |
+| `plot_results.py` | Reads the CSV and renders `asian_option_value_surface.png` (post-processing only — the ADI solver above is pure C++) |
 
 ## How to build and run
 
@@ -122,3 +123,10 @@ itself — is well below the vanilla European call struck at the same `K`. Conve
 sensitive to the `A`-grid than to the `S`-grid: coarsening `N_A` while holding `N_S` fixed moves the
 price by several percent, while the reverse does not, matching the fact that all of the operator's
 stiffness (the `1/t` singularity as `t → 0`) sits in the `A`-direction term.
+
+![Arithmetic Asian call value surface V(S,A) at t=0](asian_option_value_surface.png)
+
+The surface is essentially flat along the `A`-axis and rises steadily along the `S`-axis — a direct
+visual consequence of the payoff `(A(T)-K)^+` depending on the *terminal* average rather than on
+`A(0)` directly, so the value at `t=0` is dominated by the underlying's own diffusion over the
+remaining time to maturity rather than by the running average accumulated so far.

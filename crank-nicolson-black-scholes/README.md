@@ -82,3 +82,12 @@ call value at `t=0` increases monotonically from `0` near `S=0` up to about `26.
 consistent with the intrinsic value `S_max - K = 25` plus roughly `1.07` of time value. The grid
 evolution and heatmap plots show a smooth, non-oscillating value surface across the full price and
 time range, as expected from an unconditionally stable scheme.
+
+![V across the spatial grid at successive time steps](black_scholes_grid_evolution.png)
+
+![Heatmap of V(S,t) over price and time](black_scholes_heatmap.png)
+
+Both plots show the same qualitative feature from two angles: the value surface is smooth and
+monotone in `S` at every time slice, with no spurious oscillation near the strike — the
+signature of an unconditionally stable scheme, in contrast to the spurious oscillation an
+under-resolved explicit or non-fitted scheme can produce near a kink in the terminal payoff.

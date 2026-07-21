@@ -76,6 +76,12 @@ Six independent problems, each implemented from scratch:
    interpolation using the 4 nearest neighbors to `x = 1.5`, and Lagrange interpolation evaluated
    at a user-supplied point.
 
+![Linear vs. exponential least-squares fit on the shared dataset](curve_fitting_linear_vs_exponential.png)
+
+The exponential curve visibly tracks the data's upward-accelerating shape more closely than the
+straight line, consistent with its higher `R²` in the printed output — the plot makes concrete
+what the correlation coefficient alone only summarizes numerically.
+
 ## Linear systems, curve fitting, and interpolation
 
 **Part 1 — Linear systems of equations.**
@@ -103,3 +109,12 @@ Six independent problems, each implemented from scratch:
   the closed-form barometric relationship
   `p(h) = p(0)·(T(h)/T(0))^(-g/(aR))` to estimate pressure at 25,000 ft and report the
   discrepancy between the numerical and theoretical estimates.
+
+![Linear temperature-vs-altitude fit from the two anchor data points](troposphere_temperature_fit.png)
+
+![Pressure data, Newton interpolating polynomial, and the closed-form barometric model](atmospheric_pressure_interpolation_vs_model.png)
+
+The interpolating polynomial passes through every tabulated point exactly by construction, while
+the theoretical barometric curve is fit independently from the temperature-lapse-rate physics —
+the two curves tracking each other closely over the full altitude range is the cross-check that
+the divided-difference interpolation is not just numerically consistent but physically sensible.

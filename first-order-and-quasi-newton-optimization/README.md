@@ -18,6 +18,19 @@ Each notebook is self-contained: open it in Jupyter Notebook/Lab or VS Code and 
 order. Requires `numpy` and `matplotlib`. Every method is implemented directly from its update
 equations — no `scipy.optimize`, `cvxpy`, or autodiff library is used for any core method.
 
+## Files
+
+| File | Contents |
+|---|---|
+| `admm_lasso_and_consensus.ipynb` | Lasso and consensus ADMM, convergence plots |
+| `lbfgs_quasi_newton.ipynb` | L-BFGS, full BFGS, gradient descent, convergence plot |
+| `sgd_momentum_adam.ipynb` | SGD, momentum, Adam, trajectory and loss plots |
+| `admm_lasso_convergence.png` | Lasso ADMM primal/dual residual norms vs. iteration |
+| `admm_consensus_convergence.png` | Consensus ADMM primal/dual residual norms vs. iteration |
+| `lbfgs_rosenbrock_convergence.png` | Gradient norm vs. iteration, three methods |
+| `sgd_momentum_ill_conditioned.png` | Iterate trajectories and loss, SGD vs. momentum |
+| `sgd_adam_disparate_scales.png` | Loss vs. iteration, SGD vs. Adam under scale mismatch |
+
 ## ADMM
 
 Derives the scaled augmented-Lagrangian form and the resulting `x`/`z`/`u` iteration, then applies
@@ -30,6 +43,14 @@ parameter `rho` is chosen with some care — `rho=1` stalls one to two orders of
 the requested tolerance for both problems tested here, while `rho=10` reaches it in a few hundred
 iterations, a real (and reported) sensitivity rather than a rounding-level detail.
 
+![Lasso ADMM primal and dual residual norms vs. iteration](admm_lasso_convergence.png)
+
+![Consensus ADMM primal and dual residual norms vs. iteration, 5 agents](admm_consensus_convergence.png)
+
+Both residual curves flatten out at the chosen `rho=10` well before `max_iter`, and both show the
+same qualitative shape — an initial fast decrease followed by the linear-rate tail expected of
+ADMM's fixed per-iteration contraction factor, in contrast to L-BFGS's near-superlinear curve below.
+
 ## L-BFGS
 
 Derives the BFGS secant condition and the resulting rank-2 inverse-Hessian update, then the
@@ -40,6 +61,12 @@ over three orders of magnitude short), while both L-BFGS (`m=10`) and full BFGS 
 500 iterations and land within `1e-7` of the true minimizer — L-BFGS matching full BFGS's
 convergence almost exactly while storing `O(mn)` floats instead of the `O(n^2)` a dense inverse
 Hessian would need.
+
+![Gradient norm vs. iteration: gradient descent, L-BFGS, and full BFGS on the extended Rosenbrock function](lbfgs_rosenbrock_convergence.png)
+
+L-BFGS's and full BFGS's curves are visually indistinguishable for most of the run — the
+quasi-Newton curvature model, not the amount of history retained, is what drives the near-superlinear
+descent — while gradient descent's curve is still far from the tolerance line when the plot ends.
 
 ## SGD, momentum, and Adam
 
@@ -54,6 +81,15 @@ coordinates' curvatures, the result is unambiguous: plain SGD's single global st
 to the stiff coordinate's stability limit, leaving the soft coordinate essentially frozen, while
 Adam's per-coordinate second-moment normalization reaches a final loss over 800x lower at a step
 size two orders of magnitude larger.
+
+![Iterate trajectories and loss vs. iteration: plain SGD vs. SGD with momentum, ill-conditioned quadratic](sgd_momentum_ill_conditioned.png)
+
+![Loss vs. iteration: plain SGD vs. Adam, quadratic with a 10,000x curvature scale mismatch](sgd_adam_disparate_scales.png)
+
+The trajectory panel shows momentum's characteristic overshoot along the steep direction before
+settling, while the disparate-scales plot shows plain SGD's loss curve barely moving (the soft
+coordinate frozen by a step size set by the stiff one) against Adam's steady descent at a step size
+two orders of magnitude larger.
 
 ## Computational complexity
 

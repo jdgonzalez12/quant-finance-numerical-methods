@@ -63,9 +63,16 @@ correction variance decays geometrically from level 1 onward — `1.087`, `0.285
 an Euler-Maruyama discretization under `M=4`. (Level 0's variance, `204.1`, is the raw payoff
 variance rather than a level correction, and is not part of that geometric trend.)
 
+![V_l vs. level, showing the geometric variance decay](mlmc_level_variance.png)
+
 MLMC estimates across four target accuracies (`ε = 0.05, 0.02, 0.01, 0.005`) all land within
 `0.01` of the closed-form price (`10.4642`, `10.4367`, `10.4413`, `10.4495`), and the computational
 cost comparison shows a consistent **~180× speedup** over standard Monte Carlo at every target
 accuracy — the central result MLMC is designed to deliver, since standard MC's cost to hit a given
 `ε` grows as `O(ε^-2)` at the finest level's per-path cost, while MLMC reaches the same `ε` mostly
 from cheap, coarse-level samples.
+
+![Total computational cost, MLMC vs. standard MC, across target accuracies](mlmc_vs_standard_cost.png)
+
+The cost plot's growing gap between the two curves as `ε` shrinks is the `O(ε^-3)` vs. `O(ε^-2)`
+asymptotic separation showing up directly, not just in the tabulated ~180× figure.

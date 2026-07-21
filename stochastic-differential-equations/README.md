@@ -60,6 +60,16 @@ family) diverges by six orders of magnitude instead. This is the numerical-stabi
 behind the fully implicit scheme studied in `implicit_theta_scheme.ipynb`, which is
 unconditionally mean-square stable on the same test equation.
 
+![Strong error vs. step size on GBM, log-log with the theoretical order-0.5 slope](euler_maruyama_strong_order.png)
+
+![Weak error vs. step size on GBM, log-log with the theoretical order-1.0 slope](euler_maruyama_weak_order.png)
+
+![Mean-square stability: empirical second moment below and above the derived threshold, against the exact exponential decay](euler_maruyama_mean_square_stability.png)
+
+The stability plot is the one to look at closely: the same recursion, same random-seed family,
+tracks the exact decay below $\Delta t^\star$ and diverges by six orders of magnitude above it —
+a fixed-step-size failure mode that neither convergence-order plot could reveal on its own.
+
 ## Milstein scheme
 
 Implements `X_{n+1} = X_n + a Δt + b ΔW_n + ½ b b' [(ΔW_n)² − Δt]`.
@@ -70,12 +80,18 @@ progressively coarser step sizes (summing fine Wiener increments into coarse one
 mean absolute error at `T` on a log-log plot. Euler-Maruyama and Milstein are run side by side on
 identical paths, giving measured orders of essentially 0.5 and 1.0 respectively.
 
+![Strong error vs. step size, GBM: Euler-Maruyama vs. Milstein](milstein_gbm_convergence.png)
+
 **Cox-Ingersoll-Ross process**, `dX = κ(θ−X)dt + σ√X dW`: since `b(x)b'(x) = σ²/2` is constant for
 this diffusion coefficient, the Milstein correction simplifies to `¼σ²[(ΔW_n)² − Δt]` independent of
 `X_n`. Parameters are chosen to satisfy the Feller condition `2κθ > σ²`. With no closed-form
 path-wise solution available, the scheme is checked against a Milstein simulation on a much finer
 grid, and full truncation (`X⁺ = max(X,0)` inside every square root) keeps the discretized path
 well-defined.
+
+![Strong error vs. step size, CIR process, against a fine-grid Milstein reference](milstein_cir_convergence.png)
+
+![Sample CIR paths under Milstein with full truncation, converging toward the long-run mean](milstein_cir_sample_paths.png)
 
 ## Derivative-free stochastic Runge-Kutta
 
@@ -87,9 +103,13 @@ strong order 1.0 as Milstein without evaluating `b'` anywhere.
 **Geometric Brownian motion**: run on the same paths and parameters as the Milstein notebook, for a
 direct, apples-to-apples comparison against Euler-Maruyama.
 
+![Strong error vs. step size, GBM: Euler-Maruyama vs. derivative-free SRK](srk_gbm_convergence.png)
+
 **A nonlinear SDE**, `dX = −X dt + σ/(1+X²) dW`: `b'(x) = −2σx/(1+x²)²` is not difficult here, but
 serves as a worked example of the kind of diffusion coefficient the derivative-free scheme is meant
 for. Checked against a fine-grid reference simulation using the same scheme.
+
+![Strong error vs. step size, nonlinear SDE: Euler-Maruyama vs. derivative-free SRK](srk_nonlinear_convergence.png)
 
 ## Implicit θ-schemes for stiff systems
 
@@ -103,12 +123,16 @@ lies just inside the explicit scheme's (`θ=0`) instability region, the explicit
 by two orders of magnitude while the fully implicit scheme (`θ=1`), run on the identical driving
 path, tracks the bounded exact solution.
 
+![Explicit trajectory blowing up vs. the bounded implicit trajectory, same driving path, under stiffness](implicit_theta_stiffness_stability.png)
+
 **Strong order** (Kloeden & Platen, PC-Exercise 12.2.3, `a=5, b=0.01` and a second, better-scaled
 parameter set): every member of the θ-family — explicit, trapezoidal, and fully implicit alike —
 measures strong order `γ≈0.5`, confirming that `θ` is a stability control, not an accuracy control.
 The literal book parameters are reproduced first and shown to *not* yet exhibit a clean power law at
 the tested step sizes (a drift/diffusion crossover effect, explained rather than hidden); a
 second, diffusion-dominated parameter regime isolates the asymptotic order cleanly.
+
+![Strong error vs. step size for theta=0, 0.5, 1, all landing on the same order-0.5 slope](implicit_theta_strong_order.png)
 
 ## Multidimensional Milstein under non-commutative noise
 
@@ -122,6 +146,8 @@ between the coarse step and the reference path's finest resolution, scaled to av
 tautological reconstruction and an under-resolved one — see the notebook's Method section for why
 the scaling law matters) recovers the theoretical order `γ≈1.0`.
 
+![Strong error in X^2_T vs. step size: naive (order ~0.5) vs. corrected (order ~1.0) Milstein](multidimensional_milstein_levy_area_convergence.png)
+
 ## Weak vs. strong convergence: the order-2.0 weak Taylor scheme
 
 For geometric Brownian motion, `E[X_T] = x0·e^{aT}` in closed form, independent of `b`. Weak Euler
@@ -132,6 +158,8 @@ jointly-Gaussian time-space Lévy area `ΔZ_n = ∫(W_s−W_{t_n})ds` — measur
 multidimensional Lévy area elsewhere in this folder, `ΔZ_n` requires no separate approximation
 scheme: its exact conditional law given `ΔW_n` is derived directly from `Cov(ΔW_n,ΔZ_n)=½Δ²` and
 `Var(ΔZ_n)=⅓Δ³`, and sampled exactly.
+
+![Weak error in E[X_T] vs. step size: weak Euler (order ~1.0) vs. weak order-2.0 Taylor (order ~2.0)](weak_taylor_order2_convergence.png)
 
 ## Computational complexity and efficiency
 
